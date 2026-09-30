@@ -38,13 +38,22 @@ O aplicativo utiliza a biblioteca expo-sqlite para garantir o armazenamento loca
 
 Procedimento de Teste Realizado:
 
-1. O aplicativo foi iniciado e foram cadastradas duas novas séries ("Breaking Bad" e "Arcane") com respetivas plataformas, temporadas e notas.
+1. O aplicativo foi iniciado e foram cadastradas três novas séries ("Breaking Bad", "Supernatural" e "Dexter") com respetivas plataformas, temporadas e notas.
 
 2. A aplicação foi totalmente fechada (encerrada a sessão do Expo Go / removida dos aplicativos recentes no telemóvel).
 
 3. O aplicativo foi reaberto através do Expo Go.
 
 Resultado: As séries cadastradas mantiveram-se intactas na lista, com os seus respetivos estados de conclusão e notas guardados corretamente, confirmando o sucesso da persistência com SQLite.
+
+<img width="774" height="1600" alt="WhatsApp Image 2026-09-30 at 19 34 48" src="https://github.com/user-attachments/assets/76688d57-dee5-4112-b67e-f66ff997643b" />
+<img width="774" height="1600" alt="WhatsApp Image 2026-09-30 at 19 34 48 (2)" src="https://github.com/user-attachments/assets/7e4770a3-9c86-40ef-9a8e-51714d9f5571" />
+<img width="778" height="1600" alt="WhatsApp Image 2026-09-30 at 19 34 48 (1)" src="https://github.com/user-attachments/assets/6608e325-314e-476c-9f08-6051defc73ed" />
+
+
+### 🎥 Vídeo Demonstrativo
+Podes assistir à demonstração completa do teste de persistência no link abaixo:
+* **[Assistir no YouTube](https://youtube.com/shorts/IYTG2WbPw6w?is=UKa3qz2C4lVD4xSW)**
 
 🤖 Diário do Copiloto
 Registo das interações, tomadas de decisão e ajustes efetuados com o auxílio da inteligência artificial durante o desenvolvimento do projeto:
@@ -74,6 +83,10 @@ Interação: Solicitei a implementação de funcionalidades extras para ir além
 Decisão: Adicionamos filtragem por texto com instrução SQL LIKE ?, contadores dinâmicos com COUNT e ordenação por nota ou data de registo, melhorando significativamente a utilidade da aplicação.
 
 Registro 5 - Refinamento Visual (Dark Mode e Estados):
+
+
+
+
 
 Interação: O design inicial encontrava-se muito simples com fundo branco genérico.
 
