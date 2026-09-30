@@ -1,40 +1,44 @@
 import { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, FlatList } from 'react-native';
+import { View, Text, TouchableOpacity, FlatList, TextInput } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Serie, SerieFilter } from '../src/types/serie';
+import { Serie, SerieFilter, SerieSort } from '../src/types/serie';
 import * as SerieRepository from '../src/database/serieRepository';
 
 export default function Home() {
   const router = useRouter();
-  const insets = useSafeAreaInsets(); // Calcula as margens físicas do ecrã
+  const insets = useSafeAreaInsets();
+  
   const [series, setSeries] = useState<Serie[]>([]);
   const [filtro, setFiltro] = useState<SerieFilter>('todas');
+  const [busca, setBusca] = useState('');
+  const [ordenacao, setOrdenacao] = useState<SerieSort>('recentes');
+  const [estatisticas, setEstatisticas] = useState({ total: 0, concluidas: 0 });
 
-  const carregarSeries = useCallback(async () => {
-    const dados = await SerieRepository.getSeries(filtro);
+  const carregarDados = useCallback(async () => {
+    const dados = await SerieRepository.getSeries(filtro, busca, ordenacao);
+    const stats = await SerieRepository.getEstatisticas();
     setSeries(dados);
-  }, [filtro]);
+    setEstatisticas(stats);
+  }, [filtro, busca, ordenacao]);
 
   useFocusEffect(
     useCallback(() => {
-      carregarSeries();
-    }, [carregarSeries])
+      carregarDados();
+    }, [carregarDados])
   );
 
-const renderFiltro = (valor: SerieFilter, label: string) => {
+  const renderFiltro = (valor: SerieFilter, label: string) => {
     const ativo = filtro === valor;
-    
     return (
       <TouchableOpacity
-        // A propriedade key força o componente a ser recriado ao trocar de estado
-        key={`${valor}-${ativo}`} 
-        className={`px-4 py-2 rounded-full border ${
-          ativo ? 'bg-blue-700 border-blue-700' : 'bg-white border-gray-300'
+        key={`${valor}-${ativo}`}
+        className={`px-3.5 py-2 rounded-full border ${
+          ativo ? 'bg-indigo-600 border-indigo-600 shadow-sm' : 'bg-slate-800 border-slate-700'
         }`}
         onPress={() => setFiltro(valor)}
       >
-        <Text className={`font-bold ${ativo ? 'text-white' : 'text-gray-600'}`}>
+        <Text className={`font-semibold text-xs ${ativo ? 'text-white' : 'text-slate-300'}`}>
           {label}
         </Text>
       </TouchableOpacity>
@@ -43,57 +47,105 @@ const renderFiltro = (valor: SerieFilter, label: string) => {
 
   return (
     <View 
-      className="flex-1 bg-gray-50 px-4 pt-4"
-      // Adiciona o espaçamento inferior dinâmico baseado no telemóvel
+      className="flex-1 bg-slate-950 px-4 pt-4"
       style={{ paddingBottom: Math.max(insets.bottom, 16) }} 
     >
-      {/* Botões de Filtro */}
-      <View className="flex-row justify-between mb-4">
-        {renderFiltro('todas', 'Todas')}
-        {renderFiltro('assistindo', 'Assistindo')}
-        {renderFiltro('concluidas', 'Concluídas')}
+      {/* Cabeçalho / Estatísticas */}
+      <View className="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-3 shadow-md flex-row justify-around items-center">
+        <View className="items-center">
+          <Text className="text-slate-400 text-xs font-medium">Total</Text>
+          <Text className="text-white font-bold text-lg">📺 {estatisticas.total}</Text>
+        </View>
+        <View className="h-8 w-[1px] bg-slate-800" />
+        <View className="items-center">
+          <Text className="text-slate-400 text-xs font-medium">Concluídas</Text>
+          <Text className="text-emerald-400 font-bold text-lg">✅ {estatisticas.concluidas}</Text>
+        </View>
+      </View>
+
+      {/* Barra de Busca */}
+      <View className="mb-3">
+        <TextInput
+          className="bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white shadow-sm"
+          placeholder="Pesquisar série por título..."
+          placeholderTextColor="#64748B"
+          value={busca}
+          onChangeText={setBusca}
+        />
+      </View>
+
+      {/* Filtros e Ordenação */}
+      <View className="flex-row justify-between items-center mb-3">
+        <View className="flex-row gap-2">
+          {renderFiltro('todas', 'Todas')}
+          {renderFiltro('assistindo', 'Assistindo')}
+          {renderFiltro('concluidas', 'Concluídas')}
+        </View>
+
+        <TouchableOpacity
+          className="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl"
+          onPress={() => setOrdenacao(ordenacao === 'recentes' ? 'nota' : 'recentes')}
+        >
+          <Text className="text-xs font-semibold text-indigo-400">
+            {ordenacao === 'recentes' ? '📅 Recentes' : '⭐ Nota'}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Lista de Séries */}
       <FlatList
         data={series}
         keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => (
-          <TouchableOpacity
-            className={`p-4 rounded-xl mb-3 border border-gray-200 ${
-              item.concluida === 1 ? 'bg-gray-200 opacity-70' : 'bg-white shadow-sm'
-            }`}
-            onPress={() => router.push(`/detalhe?id=${item.id}`)}
-          >
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-lg font-bold text-gray-800 flex-1">
-                {item.titulo}
-              </Text>
-              <Text className="text-sm font-bold text-yellow-500">
-                {item.nota !== null ? `★ ${item.nota}` : 'Sem nota'}
-              </Text>
-            </View>
-            <View className="flex-row justify-between">
-              <Text className="text-gray-600 font-medium">{item.plataforma}</Text>
-              <Text className="text-gray-500 text-sm">
-                {item.temporadas} {item.temporadas === 1 ? 'temporada' : 'temporadas'}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+        renderItem={({ item }) => {
+          const concluida = item.concluida === 1;
+          return (
+            <TouchableOpacity
+              className={`p-4 rounded-2xl mb-3 border ${
+                concluida
+                  ? 'bg-emerald-950/30 border-emerald-800/50 shadow-sm' 
+                  : 'bg-slate-900 border-slate-800 shadow-md'
+              }`}
+              onPress={() => router.push(`/detalhe?id=${item.id}`)}
+            >
+              <View className="flex-row justify-between items-center mb-2">
+                <Text className={`text-base font-bold flex-1 mr-2 ${concluida ? 'text-emerald-200 line-through opacity-90' : 'text-white'}`}>
+                  {item.titulo}
+                </Text>
+                <Text className="text-xs font-bold text-amber-400 bg-amber-400/10 px-2 py-1 rounded-lg">
+                  {item.nota !== null ? `★ ${item.nota}` : 'Sem nota'}
+                </Text>
+              </View>
+              <View className="flex-row justify-between items-center">
+                <View className="flex-row items-center gap-2">
+                  <Text className="text-indigo-400 text-xs font-semibold bg-indigo-500/10 px-2.5 py-1 rounded-md">
+                    {item.plataforma}
+                  </Text>
+                  {concluida && (
+                    <Text className="text-emerald-400 text-xs font-semibold bg-emerald-500/20 px-2.5 py-1 rounded-md">
+                      ✓ Concluída
+                    </Text>
+                  )}
+                </View>
+                <Text className="text-slate-400 text-xs">
+                  {item.temporadas} {item.temporadas === 1 ? 'temporada' : 'temporadas'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
         ListEmptyComponent={
-          <Text className="text-center text-gray-500 mt-10 text-base">
-            Nenhuma série encontrada para este filtro.
-          </Text>
+          <View className="items-center justify-center mt-20">
+            <Text className="text-slate-500 text-base">Nenhuma série encontrada.</Text>
+          </View>
         }
       />
 
       {/* Botão de Nova Série */}
       <TouchableOpacity
-        className="bg-blue-700 p-4 rounded-xl mt-2 items-center"
+        className="bg-indigo-600 p-4 rounded-2xl mt-2 items-center shadow-lg shadow-indigo-600/30"
         onPress={() => router.push('/form')}
       >
-        <Text className="text-white font-bold text-lg">+ Nova série</Text>
+        <Text className="text-white font-bold text-base">+ Nova série</Text>
       </TouchableOpacity>
     </View>
   );

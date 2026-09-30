@@ -14,7 +14,6 @@ export async function getDatabase(): Promise<SQLite.SQLiteDatabase> {
   return database;
 }
 
-
 async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
   await db.execAsync(`
     PRAGMA journal_mode = WAL;
@@ -25,8 +24,7 @@ async function runMigrations(db: SQLite.SQLiteDatabase): Promise<void> {
       plataforma TEXT NOT NULL,
       temporadas INTEGER NOT NULL,
       nota INTEGER,
-      concluida INTEGER NOT NULL,
-      createdAt TEXT NOT NULL
+      concluida INTEGER NOT NULL DEFAULT 0
     );
   `);
 }
